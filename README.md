@@ -1,13 +1,13 @@
 # EFCC Scraper
 
-This script is designed to scrape search results from the EFCC (Economic and Financial Crimes Commission) website using Selenium and BeautifulSoup. It initializes a headless Chrome WebDriver, performs a search based on a given keyword, and extracts relevant information from the search results.
+This script is designed to scrape search results from the EFCC (Economic and Financial Crimes Commission) website using `aiohttp` and `BeautifulSoup`. It performs a search based on a given keyword, extracts relevant information from the search results, and retrieves full article details including images and excerpts.
 
 ## Requirements
 
 - Python 3.6+
-- Selenium
+- aiohttp
+- asyncio
 - BeautifulSoup4
-- webdriver-manager
 
 ## Installation
 
@@ -16,12 +16,12 @@ This script is designed to scrape search results from the EFCC (Economic and Fin
 2. Install the required Python packages using pip:
 
     ```bash
-    pip install selenium beautifulsoup4 webdriver-manager
+    pip install aiohttp beautifulsoup4
     ```
 
 ## Usage
 
-1. Ensure that you have Chrome installed on your system.
+1. Ensure that you have Python installed on your system.
 
 2. Run the [efcc-scraper.py](http://_vscodecontentref_/1) script:
 
