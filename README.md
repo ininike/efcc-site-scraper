@@ -16,7 +16,7 @@ This script is designed to scrape search results from the EFCC (Economic and Fin
 2. Install the required Python packages using pip:
 
     ```bash
-    pip install aiohttp beautifulsoup4
+    pip install aiohttp asyncio beautifulsoup4
     ```
 
 ## Usage
