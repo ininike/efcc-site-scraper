@@ -1,42 +1,56 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+import aiohttp
+import asyncio
 from bs4 import BeautifulSoup
-import time
+import re
 
 DOMAIN = "https://www.efcc.gov.ng"
 
 class EFCCScraper:
     def __init__(self):
-        """Initialize the Selenium WebDriver options"""
-        self.chrome_options = Options()
-        self.chrome_options.add_argument("--headless")
-        self.chrome_options.add_argument("--disable-gpu")
-        self.chrome_options.add_argument("--window-size=1920x1080")
-        self.chrome_options.add_argument("--no-sandbox")
-        self.chrome_options.add_argument("--disable-dev-shm-usage")
-        self.chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36")
-        self.service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=self.service, options=self.chrome_options)
-    
-    @staticmethod    
-    async def search(self, keyword: str) -> list:
+        pass
+        
+    def search(self, keyword: str) -> list:
+        """run search in an event loop"""
+        results = asyncio.run(self._search(keyword))
+        return results
+       
+    async def _search(self, keyword) -> list:
         """Search EFCC site based on a keyword"""
-        html = self._get_results(keyword)
-        if html:
-            results = self._extract_content(html)
-            return results
-        return []
+        async with aiohttp.ClientSession() as session:
+            html = await self._get_results(keyword, session)
+            if html:
+                results = self._extract_content(html)
+                tasks = [self._async_task(result, session) for result in results]
+                results = await asyncio.gather(*tasks)
+                return results
+            return []
 
-    def _get_results(self, keyword) -> str | None:
+    async def _get_results(self, keyword, session) -> str | None:
         """Search for the results of the first page"""
         url = f"{DOMAIN}/efcc/other-pages/smart-search?q={keyword}&limit=100"
         try:
-            self.driver.get(url)
-            time.sleep(5)
-            html = self.driver.page_source
-            return html
+            async with session.get(url) as response:
+                html = await response.text()
+                return html
+        except Exception as e:
+            print("Error:", e)
+            return None
+        
+    async def _async_task(self, result, session) -> dict:
+        """Get the full article details from the link"""
+        link = result['link']
+        article = await self._get_article(link, session)
+        if article:
+            data = self._extract_images_and_excerpt(article)
+            result.update(data)
+        return result
+        
+    async def _get_article(self, link, session) -> str | None:
+        """Get the full article from the link"""
+        try:
+            async with session.get(link) as response:
+                html = await response.text()
+                return html
         except Exception as e:
             print("Error:", e)
             return None
@@ -51,7 +65,6 @@ class EFCCScraper:
                 "author": self._clean_string(result.select_one(".badge:nth-of-type(2)").text.strip()),
                 "category": self._clean_string(result.select_one(".badge:nth-of-type(3)").text.strip()),
                 "date": result.select_one(".result-date").text.strip(),
-                "description": result.select_one(".result-text").text.strip(),
                 "link": result.select_one(".result-url").text.strip()
             }
             for result in soup.select(".result-item")
@@ -62,7 +75,24 @@ class EFCCScraper:
         """Clean the string to remove redundant data"""
         parts = text.split(':')
         return parts[1].lstrip()
-
-    def __del__(self):
-        """Ensure the WebDriver is properly closed when the object is deleted"""
-        self.driver.quit()
+    
+    def _extract_images_and_excerpt(self, html) -> dict:
+        """Extract images and excerpt from the full article"""
+        soup = BeautifulSoup(html, 'html.parser')
+        images = self._get_img_src(soup.select_one(".ja-masthead").get("style"))
+        excerpt = self._format_body(soup.select(".com-content-article__body p"))
+        return {"images": images, "excerpt": excerpt}
+    
+    def _format_body(self, body) -> str:
+        """Format the body of the article"""
+        truncated_body = body[:3]
+        return ' '.join([p.text.strip() for p in truncated_body])
+    
+    def _get_img_src(self, link) -> str:
+        """Getting the link from the style attribute"""
+        if link is None:
+            return None
+        pattern = r"url\('([^']+)'\)"
+        match = re.search(pattern, link)
+        if match:
+            return DOMAIN + match.group(1)
