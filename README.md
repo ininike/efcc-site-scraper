@@ -23,10 +23,10 @@ This script is designed to scrape search results from the EFCC (Economic and Fin
 
 1. Ensure that you have Python installed on your system.
 
-2. Run the [efcc-scraper.py](http://_vscodecontentref_/1) script:
+2. Run the [efcc-scraper.py](https://github.com/ininike/efcc-site-scraper/blob/main/efcc-scraper.py) script:
 
     ```bash
     python efcc-scraper.py
     ```
 
-3. The script will perform a search on the EFCC website based on the keyword provided in the [search](http://_vscodecontentref_/2) method and print the extracted results.
+3. The script will perform a search on the EFCC website based on the keyword provided in the search method and print the extracted results.
