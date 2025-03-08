@@ -29,4 +29,4 @@ This script is designed to scrape search results from the EFCC (Economic and Fin
     python efcc-scraper.py
     ```
 
-3. The script will perform a search on the EFCC website based on the keyword provided in the search method and print the extracted results.
+3. The script will perform a search on the EFCC website based on the keyword provided in the `search` method and print the extracted results.
